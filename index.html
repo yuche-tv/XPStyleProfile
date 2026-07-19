@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的個人博客 - WinXP 風格</title>
+
+    <!-- 引入 XP.css 樣式庫 -->
+    <link rel="stylesheet" href="https://unpkg.com/xp.css">
+
+    <!-- 引入 jQuery 與 jQuery UI -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+
+    <style>
+        /* ================= 基礎佈局與桌面樣式 ================= */
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+            font-family: Tahoma, SimSun, "宋体", sans-serif;
+            font-size: 12px;
+            background-color: #000;
+        }
+
+        #desktop {
+            width: 100%;
+            height: calc(100vh - 30px);
+            background: #3a6ea5 url('assets/bg.jpg') no-repeat center center;
+            background-size: cover;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-content: flex-start;
+            flex-wrap: wrap;
+            padding: 10px;
+            box-sizing: border-box;
+            gap: 15px;
+        }
+
+        .desktop-icon {
+            width: 70px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            text-align: center;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+
+        .desktop-icon img {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 5px;
+        }
+
+        .desktop-icon span {
+            color: white;
+            text-shadow: 1px 1px 1px black;
+            padding: 2px 4px;
+            border: 1px dotted transparent;
+        }
+
+        .desktop-icon.selected span {
+            background-color: #0b5ce3;
+            border: 1px dotted #ccc;
+            text-shadow: none;
+        }
+
+        /* ================= 窗口樣式 ================= */
+        .window-container {
+            position: absolute;
+            display: none;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+            min-width: 250px;
+            min-height: 200px;
+        }
+
+        .window-animating {
+            transition: top 0.2s cubic-bezier(0.25, 0.8, 0.25, 1),
+                left 0.2s cubic-bezier(0.25, 0.8, 0.25, 1),
+                width 0.2s cubic-bezier(0.25, 0.8, 0.25, 1),
+                height 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .title-bar {
+            user-select: none;
+            transition: background 0.1s ease;
+        }
+
+        .title-bar.inactive {
+            background: linear-gradient(to bottom, #7697e7 0%, #7e9ee3 8%, #94afe8 40%, #94afe8 88%, #6883c4 100%) !important;
+            border-color: #6883c4 !important;
+        }
+
+        .title-bar.inactive .title-bar-text {
+            color: #d0d0d0 !important;
+        }
+
+        .window-body-wrapper {
+            height: calc(100% - 35px);
+            margin: 0;
+            padding: 4px;
+            box-sizing: border-box;
+            background-color: #ece9d8;
+        }
+
+        .window-iframe {
+            width: 100%;
+            height: 100%;
+            border: 2px inset #fff;
+            box-sizing: border-box;
+            background: white;
+            overflow: auto;
+        }
+
+        .iframe-shield {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 10;
+            display: none;
+        }
+
+        .title-bar-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        /* ================= 任務欄與 Start 按鈕 ================= */
+        #taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100vw;
+            height: 30px;
+            background: linear-gradient(to bottom, #245edb 0%, #3f8cf3 5%, #245edb 15%, #245edb 90%, #1941a5 100%);
+            border-top: 1px solid #002b9f;
+            display: flex;
+            align-items: center;
+            padding: 0;
+            box-sizing: border-box;
+            z-index: 9000;
+        }
+
+        #start-btn {
+            background: linear-gradient(to bottom, #0054E3 0%, #0875DF 10%, #0C7DE4 40%, #1597F6 92%, #0F8BF1 100%);
+            border: none;
+            border-radius: 0 15px 15px 0 / 0 25px 25px 0;
+            color: white;
+            font-family: "Franklin Gothic Medium", "Arial", sans-serif;
+            font-style: italic;
+            font-weight: bold;
+            font-size: 16px;
+            padding: 0 16px 0 10px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.4), 2px 0px 3px rgba(0, 0, 0, 0.3);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+            margin-right: 5px;
+            box-sizing: border-box;
+        }
+
+        #start-btn:hover {
+            background: linear-gradient(to bottom, #1c6bee 0%, #298bf3 10%, #3a97ea 40%, #5cb3f9 92%, #4ba3f7 100%);
+        }
+
+        #start-btn.active {
+            background: linear-gradient(to bottom, #002b80 0%, #003da8 20%, #0052cc 80%, #003da8 100%);
+            box-shadow: inset 2px 2px 3px rgba(0, 0, 0, 0.6);
+        }
+
+        .xp-flag-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 5px;
+        }
+
+        /* ================= 雙欄開始菜單 ================= */
+        #start-menu {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            width: 380px;
+            background-color: white;
+            border: 1px solid #002b9f;
+            border-radius: 5px 5px 0 0;
+            display: none;
+            flex-direction: column;
+            box-shadow: 2px -2px 10px rgba(0, 0, 0, 0.5);
+            z-index: 9001;
+            overflow: hidden;
+            font-family: Tahoma, SimSun, sans-serif;
+        }
+
+        .start-menu-header {
+            background: linear-gradient(to bottom, #1754ce 0%, #2c81f7 12%, #1754ce 100%);
+            color: white;
+            padding: 6px 10px;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #f68b20;
+        }
+
+        .start-menu-header img {
+            width: 32px;
+            height: 32px;
+            border: 2px solid white;
+            border-radius: 3px;
+            margin-right: 10px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .start-menu-body {
+            display: flex;
+            height: 300px;
+            background: #fff;
+        }
+
+        .start-menu-left {
+            flex: 1;
+            background-color: white;
+            padding: 5px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #d3e5fa;
+        }
+
+        .start-menu-right {
+            flex: 1;
+            background-color: #d3e5fa;
+            padding: 5px;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #99c1ed;
+        }
+
+        .start-menu-item {
+            padding: 6px 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: #000;
+            border-radius: 2px;
+            margin-bottom: 2px;
+        }
+
+        .start-menu-right .start-menu-item {
+            color: #001f5c;
+            font-weight: bold;
+        }
+
+        .start-menu-item:hover {
+            background-color: #2f71cd;
+            color: white;
+        }
+
+        .start-menu-right .start-menu-item:hover {
+            color: white;
+        }
+
+        .start-menu-item img {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #ccc, transparent);
+            margin: 5px 5px;
+        }
+
+        .start-menu-right .menu-divider {
+            background: linear-gradient(to right, transparent, #86b4e6, transparent);
+        }
+
+        .start-menu-footer {
+            background: linear-gradient(to bottom, #245edb 0%, #3f8cf3 15%, #245edb 100%);
+            padding: 8px 15px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            border-top: 1px solid #002b9f;
+        }
+
+        .footer-btn {
+            display: flex;
+            align-items: center;
+            color: white;
+            cursor: pointer;
+            font-size: 11px;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .footer-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .footer-btn img {
+            width: 18px;
+            height: 18px;
+            margin-right: 5px;
+        }
+
+        /* ================= 任務欄圖標 ================= */
+        #taskbar-windows {
+            flex-grow: 1;
+            display: flex;
+            gap: 3px;
+            height: 24px;
+            overflow: hidden;
+            padding-left: 5px;
+            align-items: center;
+        }
+
+        .taskbar-btn {
+            flex: 1 1 auto;
+            max-width: 150px;
+            min-width: 30px;
+            height: 22px;
+            background: linear-gradient(to bottom, #3f8cf3 0%, #3c81f3 10%, #245edb 50%, #245edb 90%, #174ab8 100%);
+            border: 1px solid #1a49ba;
+            border-radius: 3px;
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 6px;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.4);
+            transition: background 0.1s;
+        }
+
+        .taskbar-btn:hover {
+            background: linear-gradient(to bottom, #5097f4 0%, #4c8df3 10%, #356be0 50%, #356be0 90%, #2558c7 100%);
+        }
+
+        .taskbar-btn.active {
+            background: linear-gradient(to bottom, #1c49aa 0%, #173b88 100%);
+            box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.6);
+            border: 1px solid #00164a;
+        }
+
+        .taskbar-btn img {
+            width: 14px;
+            height: 14px;
+            margin-right: 5px;
+        }
+
+        #taskbar-clock {
+            background: linear-gradient(to bottom, #0F8BF1 0%, #1597F6 8%, #0C7DE4 40%, #0875DF 90%, #0054E3 100%);
+            border-left: 1px solid #1042af;
+            color: white;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            box-shadow: inset 1px 0 0 #3a9cf3;
+            white-space: nowrap;
+        }
+
+        /* ================= 屏幕保護程式 ================= */
+        #screensaver {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: black;
+            z-index: 99999;
+            display: none;
+            cursor: none;
+        }
+
+        #screensaver img {
+            position: absolute;
+            width: 120px;
+            height: auto;
+            opacity: 0.8;
+            transition: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="screensaver">
+        <img src="assets/xp_logo_white.png" id="ss-logo" alt="Windows Logo">
+    </div>
+
+    <div id="desktop"></div>
+
+    <div id="start-menu">
+        <div class="start-menu-header">
+            <img src="assets/user_admin.png" alt="Admin"> JustYuche
+        </div>
+
+        <div class="start-menu-body">
+            <div class="start-menu-left">
+                <div class="start-menu-item" onclick="triggerApp('app-profile')">
+                    <img src="assets/icon_profile.png" alt="Profile"> 我的資料
+                </div>
+                <div class="start-menu-item" onclick="triggerApp('app-articles')">
+                    <img src="assets/icon_articles.png" alt="Articles"> 文章列表
+                </div>
+
+                <div style="flex-grow: 1;"></div>
+            </div>
+
+            <div class="start-menu-right">
+                <div class="start-menu-item" onclick="triggerApp('app-tools')">
+                    <img src="assets/icon_tools.png" alt="Docs"> 我的工具
+                </div>
+                <div class="start-menu-item" onclick="triggerApp('app-gallery')">
+                    <img src="assets/icon_gallery.png" alt="Images"> 網上展館
+                </div>
+
+                <div class="menu-divider"></div>
+
+                <div class="start-menu-item" onclick="triggerApp('app-control')">
+                    <img src="assets/icon_control.png" alt="Control"> 控制面板
+                </div>
+            </div>
+        </div>
+
+        <div class="start-menu-footer">
+            <div class="footer-btn" id="menu-restart">
+                <img src="assets/btn_restart.png" alt="Restart"> 重啓
+            </div>
+            <div class="footer-btn" id="menu-shutdown">
+                <img src="assets/btn_shutdown.png" alt="Logoff"> 關機
+            </div>
+        </div>
+    </div>
+
+    <!-- 任務欄 -->
+    <div id="taskbar">
+        <div id="start-btn">
+            <img class="xp-flag-icon" src="assets/xp_start_icon.png" alt="Windows Start Logo"
+                onerror="this.style.display='none';">
+            start
+        </div>
+
+        <div id="taskbar-windows"></div>
+        <div id="taskbar-clock">加載中...</div>
+    </div>
+
+    <script>
+        function triggerApp(appId) {
+            $('#start-menu').hide();
+            $('#start-btn').removeClass('active');
+            const targetIcon = document.querySelector(`[data-id='${appId}']`);
+            if (targetIcon) {
+                const dblclickEvent = new MouseEvent('dblclick', { bubbles: true, cancelable: true });
+                targetIcon.dispatchEvent(dblclickEvent);
+            }
+        }
+
+        $(document).ready(function () {
+            const apps = [
+                { id: 'app-profile', name: '我的資料', iconSrc: 'assets/icon_profile.png', url: 'pages/profile.html' },
+                { id: 'app-articles', name: '文章列表', iconSrc: 'assets/icon_articles.png', url: 'pages/articles.html' },
+                { id: 'app-gallery', name: '網上展館', iconSrc: 'assets/icon_gallery.png', url: 'pages/gallery.html' },
+                { id: 'app-tools', name: '我的工具', iconSrc: 'assets/icon_tools.png', url: 'pages/tools.html' },
+                { id: 'app-control', name: '控制面板', iconSrc: 'assets/icon_control.png', url: 'pages/control.html' },
+                { id: 'app-guestbook', name: '留言板', iconSrc: 'assets/icon_guestbook.png', url: 'pages/guestbook.html' }
+            ];
+
+            let globalZIndex = 100;
+            let windowOpenCount = 0;
+            const windowStates = {};
+
+            function updateClock() {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = now.getMonth() + 1;
+                const date = now.getDate();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                $('#taskbar-clock').text(`${year}.${month}.${date} ${hours}:${minutes}`);
+            }
+            setInterval(updateClock, 1000);
+            updateClock();
+
+            // ================= 屏保機制 =================
+            let idleTimer;
+            let screensaverInterval;
+            const IDLE_TIMEOUT = 60000;
+
+            function resetIdleTimer() {
+                if ($('#screensaver').is(':visible')) hideScreensaver();
+                clearTimeout(idleTimer);
+                idleTimer = setTimeout(showScreensaver, IDLE_TIMEOUT);
+            }
+
+            function showScreensaver() {
+                $('#screensaver').fadeIn(300);
+                moveScreensaverLogo();
+                screensaverInterval = setInterval(moveScreensaverLogo, 6000);
+            }
+
+            function hideScreensaver() {
+                $('#screensaver').fadeOut(200);
+                clearInterval(screensaverInterval);
+            }
+
+            function moveScreensaverLogo() {
+                const $icon = $('#ss-logo');
+                const maxX = $(window).width() - 120;
+                const maxY = $(window).height() - 100;
+
+                const randomX = Math.max(0, Math.floor(Math.random() * maxX));
+                const randomY = Math.max(0, Math.floor(Math.random() * maxY));
+
+                $icon.css({ left: randomX + 'px', top: randomY + 'px' });
+            }
+
+            $(document).on('mousemove keydown mousedown click scroll', resetIdleTimer);
+            resetIdleTimer();
+
+            // ================= Start 選單 =================
+            $('#start-btn').on('click', function (e) {
+                e.stopPropagation();
+                $('#start-menu').toggle();
+                $(this).toggleClass('active');
+
+                if ($('#start-menu').is(':visible')) {
+                    focusWindow(null, null);
+                }
+            });
+
+            $(document).on('mousedown', function (e) {
+                if (!$(e.target).closest('#start-menu, #start-btn').length) {
+                    $('#start-menu').hide();
+                    $('#start-btn').removeClass('active');
+                }
+            });
+
+            $('#menu-restart').on('click', function () { location.reload(); });
+            $('#menu-shutdown').on('click', function () {
+                window.open('about:blank', '_self').close();
+                window.close();
+            });
+
+            // ================= 桌面圖擺生成 =================
+            apps.forEach(app => {
+                const iconHtml = `
+                    <div class="desktop-icon" data-id="${app.id}">
+                        <img src="${app.iconSrc}" alt="${app.name}">
+                        <span>${app.name}</span>
+                    </div>
+                `;
+                $('#desktop').append(iconHtml);
+            });
+
+            $('#desktop').on('mousedown', function (e) {
+                if (e.target === this) {
+                    $('.desktop-icon').removeClass('selected');
+                    focusWindow(null, null);
+                }
+            });
+
+            $('#desktop').on('click', '.desktop-icon', function (e) {
+                e.stopPropagation();
+                $('.desktop-icon').removeClass('selected');
+                $(this).addClass('selected');
+            });
+
+            $('#desktop').on('dblclick', '.desktop-icon', function () {
+                const appId = $(this).data('id');
+                const app = apps.find(a => a.id === appId);
+                if (app) openWindow(app);
+            });
+
+            // ================= 窗口創建與居中管理 =================
+            function openWindow(app) {
+                const winId = `win-${app.id}`;
+                const taskBtnId = `task-${app.id}`;
+
+                if ($(`#${winId}`).length > 0) {
+                    restoreWindow(winId, taskBtnId);
+                    focusWindow(winId, taskBtnId);
+                    return;
+                }
+
+                const state = windowStates[app.id];
+                const winWidthNum = 600;
+                const winHeightNum = 400;
+
+                const offset = (windowOpenCount % 10) * 20;
+                windowOpenCount++;
+
+                const centerX = Math.max(0, ($(window).width() - winWidthNum) / 2) + offset;
+                const centerY = Math.max(0, ($(window).height() - winHeightNum - 30) / 2) + offset;
+
+                const winTop = state ? state.top : centerY + 'px';
+                const winLeft = state ? state.left : centerX + 'px';
+                const winWidth = state ? state.width : winWidthNum + 'px';
+                const winHeight = state ? state.height : winHeightNum + 'px';
+
+                const windowHtml = `
+                    <div class="window window-container" id="${winId}" style="width: ${winWidth}; height: ${winHeight}; top: ${winTop}; left: ${winLeft};">
+                        <div class="title-bar">
+                            <div class="title-bar-text">
+                                <img src="${app.iconSrc}" class="title-bar-icon" alt="">
+                                ${app.name}
+                            </div>
+                            <div class="title-bar-controls">
+                                <button aria-label="Minimize" class="btn-minimize"></button>
+                                <button aria-label="Maximize" class="btn-maximize"></button>
+                                <button aria-label="Close" class="btn-close"></button>
+                            </div>
+                        </div>
+                        <div class="window-body-wrapper">
+                            <div class="iframe-shield"></div>
+                            <iframe src="${app.url}" class="window-iframe" frameborder="0"></iframe>
+                        </div>
+                    </div>
+                `;
+                $('body').append(windowHtml);
+
+                const taskBtnHtml = `
+                    <div class="taskbar-btn active" id="${taskBtnId}">
+                        <img src="${app.iconSrc}" alt="">
+                        ${app.name}
+                    </div>
+                `;
+                $('#taskbar-windows').append(taskBtnHtml);
+
+                const $win = $(`#${winId}`);
+                const $taskBtn = $(`#${taskBtnId}`);
+
+                // 核心優化 1：還原極致自由！不加任何內部 drag 座標過濾限制，允許拖到任何地方
+                $win.draggable({
+                    handle: ".title-bar",
+                    start: function () {
+                        focusWindow(winId, taskBtnId);
+                        $(this).find('.iframe-shield').show();
+                    },
+                    stop: function () { $(this).find('.iframe-shield').hide(); }
+                }).resizable({
+                    minHeight: 200,
+                    minWidth: 250,
+                    start: function () {
+                        focusWindow(winId, taskBtnId);
+                        $(this).find('.iframe-shield').show();
+                    },
+                    stop: function () { $(this).find('.iframe-shield').hide(); }
+                });
+
+                if (state && state.isMaximized) {
+                    $win.data('prev-top', state.top);
+                    $win.data('prev-left', state.left);
+                    $win.data('prev-width', state.width);
+                    $win.data('prev-height', state.height);
+                    $win.css({ top: 0, left: 0, width: '100vw', height: 'calc(100vh - 30px)' });
+                    $win.draggable('disable');
+                    $win.resizable('disable');
+                    $win.data('maximized', true);
+                    $win.find('.btn-maximize').attr('aria-label', 'Restore');
+                } else {
+                    $win.data('maximized', false);
+                }
+
+                $win.show();
+                focusWindow(winId, taskBtnId);
+
+                $win.on('mousedown', function () { focusWindow(winId, taskBtnId); });
+
+                $win.find('.title-bar').on('dblclick', function (e) {
+                    if (!$(e.target).closest('.title-bar-controls').length) toggleMaximize(winId);
+                });
+
+                $win.find('.btn-close').on('click', function () {
+                    const isMax = $win.data('maximized');
+                    windowStates[app.id] = {
+                        top: isMax ? $win.data('prev-top') : $win.css('top'),
+                        left: isMax ? $win.data('prev-left') : $win.css('left'),
+                        width: isMax ? $win.data('prev-width') : $win.css('width'),
+                        height: isMax ? $win.data('prev-height') : $win.css('height'),
+                        isMaximized: isMax
+                    };
+                    $win.remove();
+                    $taskBtn.remove();
+                });
+
+                $win.find('.btn-minimize').on('click', function () { minimizeWindow(winId, taskBtnId); });
+                $win.find('.btn-maximize').on('click', function () { toggleMaximize(winId); });
+
+                $taskBtn.on('click', function () {
+                    if ($win.is(':hidden')) {
+                        restoreWindow(winId, taskBtnId);
+                        focusWindow(winId, taskBtnId);
+                    } else if ($taskBtn.hasClass('active')) {
+                        minimizeWindow(winId, taskBtnId);
+                    } else {
+                        focusWindow(winId, taskBtnId);
+                        // 核心優化 2：只有當視窗原本就開著，用戶重複點擊任務欄按鈕試圖「重新聚焦」時
+                        // 如果此時標題列跑出去了，才觸發微調安全回彈
+                        checkAndResetIfTitleBarInvisible($win);
+                    }
+                });
+            }
+
+            function focusWindow(winId, taskBtnId) {
+                $('.window-container .title-bar').addClass('inactive');
+                $('.taskbar-btn').removeClass('active');
+                if (winId && taskBtnId) {
+                    globalZIndex++;
+                    $(`#${winId}`).css('z-index', globalZIndex);
+                    $(`#${winId} .title-bar`).removeClass('inactive');
+                    $(`#${taskBtnId}`).addClass('active');
+                }
+            }
+
+            function minimizeWindow(winId, taskBtnId) {
+                $(`#${winId}`).fadeOut(150);
+                $(`#${taskBtnId}`).removeClass('active');
+            }
+
+            // 核心優化 3：封裝強健的非同步安全過濾閘門，絕不干擾拖動，絕不產生 NaN 癱瘓[cite: 15, 18]
+            function checkAndResetIfTitleBarInvisible($win) {
+                if ($win && $win.length > 0 && !$win.data('maximized')) {
+                    // 使用 jQuery 的 .position() 整數獲取相對座標，完美繞開 parseFloat('auto') 的 NaN 陷阱
+                    const pos = $win.position();
+                    if (!pos) return;
+
+                    const currentTop = pos.top;
+                    const currentLeft = pos.left;
+                    const winWidth = $win.outerWidth() || 250;
+
+                    const screenWidth = $(window).width() || 1024;
+                    const screenHeight = $(window).height() || 768;
+
+                    let needsAdjustment = false;
+                    let targetTop = currentTop;
+                    let targetLeft = currentLeft;
+
+                    // A. 上方出界判定：標題列隱沒在頂部外側
+                    if (currentTop < 0) {
+                        targetTop = 0;
+                        needsAdjustment = true;
+                    }
+                    // B. 下方出界判定：標題列完全掉到任務欄以下
+                    if (currentTop > screenHeight - 60) {
+                        targetTop = screenHeight - 60;
+                        needsAdjustment = true;
+                    }
+                    // C. 左側出界優化判定：右側預留 160px，確保控制按鈕與足夠的拖曳橫條露出[cite: 17]
+                    if (currentLeft < -winWidth + 160) {
+                        targetLeft = -winWidth + 160;
+                        needsAdjustment = true;
+                    }
+                    // D. 右側出界判定：左側預留 60px 可供拖回[cite: 17]
+                    if (currentLeft > screenWidth - 60) {
+                        targetLeft = screenWidth - 60;
+                        needsAdjustment = true;
+                    }
+
+                    // 只有在判定標題列完全失效不可互動時，才微調拉回！[cite: 15]
+                    if (needsAdjustment) {
+                        $win.css({ top: targetTop + 'px', left: targetLeft + 'px' });
+                    }
+                }
+            }
+
+            // 核心優化 4：當視窗從最小化被「還原」時，同步執行出界校正[cite: 15]
+            function restoreWindow(winId, taskBtnId) {
+                const $win = $(`#${winId}`);
+                $win.show();
+                checkAndResetIfTitleBarInvisible($win);
+            }
+
+            function toggleMaximize(winId) {
+                const $win = $(`#${winId}`);
+                const isMaximized = $win.data('maximized');
+                const $maxBtn = $win.find('.btn-maximize');
+
+                $win.addClass('window-animating');
+
+                if (!isMaximized) {
+                    $win.data('prev-top', $win.css('top'));
+                    $win.data('prev-left', $win.css('left'));
+                    $win.data('prev-width', $win.css('width'));
+                    $win.data('prev-height', $win.css('height'));
+
+                    $win.css({ top: 0, left: 0, width: '100vw', height: 'calc(100vh - 30px)' });
+                    $win.draggable('disable');
+                    $win.resizable('disable');
+                    $win.data('maximized', true);
+                    $maxBtn.attr('aria-label', 'Restore');
+                } else {
+                    $win.css({
+                        top: $win.data('prev-top'),
+                        left: $win.data('prev-left'),
+                        width: $win.data('prev-width'),
+                        height: $win.data('prev-height')
+                    });
+                    $win.draggable('enable');
+                    $win.resizable('enable');
+                    $win.data('maximized', false);
+                    $maxBtn.attr('aria-label', 'Maximize');
+
+                    // 核心優化 5：最大化視窗「還原」時，防範因先前瀏覽器縮放導致的標題得出界[cite: 15]
+                    checkAndResetIfTitleBarInvisible($win);
+                }
+                setTimeout(() => { $win.removeClass('window-animating'); }, 200);
+            }
+        });
+    </script>
+</body>
+
+</html>
