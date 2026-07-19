@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的資料</title>
+
+    <!-- 引入與主頁相同的 XP.css 樣式庫 -->
+    <link rel="stylesheet" href="https://unpkg.com/xp.css">
+
+    <style>
+        /* 移除外邊距，設定符合 XP 系統內頁的經典灰色背景 */
+        body {
+            margin: 0;
+            padding: 12px;
+            background-color: #ece9d8;
+            font-family: Tahoma, SimSun, "宋体", sans-serif;
+            font-size: 12px;
+            color: #000;
+        }
+
+        /* 雙欄佈局容器 */
+        .profile-container {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        /* 左側主要內容區域 */
+        .main-content {
+            flex: 1;
+        }
+
+        /* 右側頭像獨立盒子 */
+        .avatar-box {
+            width: 120px;
+            padding: 6px;
+            background-color: #fff;
+            border: 2px inset #fff;
+            /* 經典 XP 內凹邊框 */
+            box-shadow: 1px 1px 0px #fff;
+            text-align: center;
+            box-sizing: border-box;
+
+            /* 修改重點：防止左側長文本過多時將右側相框擠壓變形 */
+            flex-shrink: 0;
+        }
+
+        .avatar-box img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border: 1px solid #7f9db9;
+            /* 系統相框線 */
+            margin-bottom: 6px;
+            background-color: #f1f1f1;
+        }
+
+        .avatar-label {
+            font-weight: bold;
+            color: #001f5c;
+        }
+
+        /* 標題與小標題樣式 */
+        h1 {
+            font-size: 18px;
+            margin: 0 0 4px 0;
+            color: #001f5c;
+            font-weight: bold;
+        }
+
+        h2 {
+            font-size: 13px;
+            margin: 0 0 12px 0;
+            color: #555;
+            font-weight: normal;
+        }
+
+        /* 經典 XP 風格水平分隔線 */
+        .xp-hr {
+            height: 2px;
+            border: none;
+            background-color: #7f9db9;
+            margin: 12px 0;
+            box-shadow: 0 1px 0 #fff;
+        }
+
+        /* 正文與屬性列表 */
+        .info-group {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #333;
+            display: inline-block;
+            width: 70px;
+        }
+
+        p.bio {
+            line-height: 1.6;
+            margin: 8px 0 0 0;
+            text-align: justify;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 經典 XP 屬性頁面結構，最外層包裹一個簡潔的 fieldset 盒子 -->
+    <fieldset style="margin: 0; padding: 16px;">
+        <legend>用戶屬性</legend>
+
+        <div class="profile-container">
+            <!-- 左側資料區 -->
+            <div class="main-content">
+                <h1>哈嘍寶貝，我是語澈</h1>
+                <h2>計算機管理員 / 個人網頁站長 / YouTuber</h2>
+
+                <hr class="xp-hr">
+
+                <div class="info-group">
+                    <span class="info-label">計算機名:</span> Yuche's Website
+                </div>
+                <div class="info-group">
+                    <span class="info-label">工作組:</span> WORKGROUP
+                </div>
+                <div class="info-group">
+                    <span class="info-label">註冊日期:</span> 2026-7-20
+                </div>
+                <div class="info-group">
+                    <span class="info-label">目前狀態:</span> 在線 (網頁運行中)
+                </div>
+
+                <hr class="xp-hr">
+
+                <div class="info-group">
+                    <strong style="display: block; margin-bottom: 4px;">個人簡介：</strong>
+                    <!-- 修改重點：填充足夠多的長篇測試內容，並使用換行保持結構清晰 -->
+                    <p class="bio">
+                        歡迎來到我的個人屬性對話框！我是語澈（JustYuche），一名熱衷於復古作業系統美學、全端網頁開發與數位內容創作的站長。本網頁採用了最純粹的 Windows XP Luna
+                        風格進行排版與前端架構設計，移除了現代網頁中常見的扁平化與華麗動畫特效，致力於將每一位訪客帶回那個藍天白雲與綠色開始按鈕的經典黃金年代。<br><br>
+                        作為一名全端技術愛好者，我喜歡探索各類編程語言與復古前端庫的結合。這個網站不僅是我的個人簡歷展示平台，更是我的前端實驗室。從開始功能表的級聯渲染、動態時鐘與隨機漂移的螢幕保護程式，到獨立的
+                        Markdown 文章解析引擎與基於 JSON 管理的網上展館，每一個視窗與控制元件都經過了像素級的調試，力求還原最真實的作業系統操作質感。<br><br>
+                        除了寫程式之外，我也在 YouTube
+                        平台上經營著自己的數位頻道，分享關於計算機技術優化、經典硬體評測以及復古網頁開發的教學影片。如果你對這個專案的底層源碼感興趣，歡迎透過主桌面的「留言板」或控制面板與我取得聯繫。本頁面目前的超長文本主要用於全面測試主視窗在極端長度內容下的
+                        iframe 渲染效能、滾動條流暢度以及彈性排版抗擠壓能力，感謝您的耐心瀏覽與測試！
+                    </p>
+                </div>
+            </div>
+
+            <!-- 右側獨立頭像盒 -->
+            <div class="avatar-box">
+                <!-- 預留獨立頭像圖片路徑 -->
+                <img src="../assets/avatar_large.png" alt="User Avatar" onerror="this.style.backgroundColor='#99c1ed';">
+                <div class="avatar-label">JustYuche</div>
+            </div>
+        </div>
+    </fieldset>
+
+</body>
+
+</html>

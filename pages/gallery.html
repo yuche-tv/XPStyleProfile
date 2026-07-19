@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>網上展館 - 我的圖片</title>
+
+    <!-- 引入與主頁相同的 XP.css 樣式庫 -->
+    <link rel="stylesheet" href="https://unpkg.com/xp.css">
+    <!-- 引入 jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 12px;
+            background-color: #ece9d8;
+            font-family: Tahoma, SimSun, "宋体", sans-serif;
+            font-size: 12px;
+            color: #000;
+        }
+
+        /* 修改重點：圖片網格佈局，移除固定高度與內部滾動條，使其隨條目增多自動擴展 */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 16px;
+            padding: 10px;
+            background: #fff;
+            border: 2px inset #fff;
+            /* 經典 XP 白色資料夾內凹底框 */
+            /* 移除了 max-height 與 overflow-y，避免出現重複側邊滑條 */
+        }
+
+        /* 單個圖片相框 */
+        .gallery-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 6px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-radius: 2px;
+            align-self: start;
+            /* 保持垂直方向不拉伸 */
+        }
+
+        .gallery-item:hover {
+            background-color: #e0ecef;
+            border: 1px solid #7f9db9;
+        }
+
+        /* 縮圖容器 */
+        .thumbnail-box {
+            width: 96px;
+            height: 96px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f1f1f1;
+            border: 1px solid #d3d3d3;
+            box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .thumbnail-box img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* 圖片備註 */
+        .image-caption {
+            margin-top: 6px;
+            word-break: break-all;
+            color: #333;
+            max-width: 110px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* ================= XP 風格大圖檢視模態彈窗 ================= */
+        .xp-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .xp-modal-window {
+            min-width: 300px;
+            max-width: 90vw;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-image-container {
+            background: #000;
+            border: 2px inset #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 4px;
+            max-height: 70vh;
+        }
+
+        .modal-image-container img {
+            max-width: 100%;
+            max-height: 65vh;
+            object-fit: contain;
+        }
+
+        .modal-caption-bar {
+            margin-top: 6px;
+            padding: 6px;
+            background-color: #fff;
+            border: 1px solid #7f9db9;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <fieldset style="margin: 0; padding: 12px;">
+        <legend>相簿管理器 - 縮圖檢視</legend>
+
+        <!-- 圖片展示網格 -->
+        <div class="gallery-grid" id="gallery-container">
+            <div style="grid-column: 1/-1; text-align:center; padding: 40px; color:#666;">正在讀取圖片清單...</div>
+        </div>
+    </fieldset>
+
+    <!-- XP 風格大圖查看彈窗 -->
+    <div class="xp-modal-overlay" id="image-modal">
+        <div class="window xp-modal-window">
+            <div class="title-bar">
+                <div class="title-bar-text">Windows 圖片與傳真檢視器</div>
+                <div class="title-bar-controls">
+                    <button aria-label="Close" id="close-modal"></button>
+                </div>
+            </div>
+            <div class="window-body" style="background-color: #ece9d8; margin: 0; padding: 8px;">
+                <div class="modal-image-container">
+                    <img id="modal-target-img" src="" alt="大圖">
+                </div>
+                <div class="modal-caption-bar" id="modal-target-caption">
+                    圖片備註
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            const GALLERY_PATH = '../assets/gallery/';
+            const JSON_URL = GALLERY_PATH + 'images.json';
+
+            let globalImageData = [];
+            const $container = $('#gallery-container');
+
+            function loadImagesFromJSON() {
+                $.ajax({
+                    url: JSON_URL,
+                    dataType: 'json',
+                    cache: false,
+                    success: function (data) {
+                        globalImageData = data;
+                        renderGallery(globalImageData);
+                    },
+                    error: function (err) {
+                        console.error("無法加載 images.json", err);
+                        $container.html('<div style="grid-column: 1/-1; text-align:center; padding: 40px; color:red;">加載失敗，請檢查 assets/gallery/images.json 是否存在或格式正確。</div>');
+                    }
+                });
+            }
+
+            function renderGallery(images) {
+                if (images.length === 0) {
+                    $container.html('<div style="grid-column: 1/-1; text-align:center; padding: 40px; color:#666;">資料夾內沒有圖片。</div>');
+                    return;
+                }
+
+                let htmlStr = '';
+                images.forEach((img, index) => {
+                    const fullPath = GALLERY_PATH + img.filename;
+                    htmlStr += `
+                        <div class="gallery-item" data-index="${index}" data-src="${fullPath}">
+                            <div class="thumbnail-box">
+                                <img src="${fullPath}" alt="${img.caption}" onerror="this.src='../assets/icon_gallery.png'; this.style.opacity='0.5';">
+                            </div>
+                            <div class="image-caption">${img.caption}</div>
+                        </div>
+                    `;
+                });
+                $container.html(htmlStr);
+            }
+
+            $container.on('click', '.gallery-item', function () {
+                const imgIdx = $(this).data('index');
+                const imgInfo = globalImageData[imgIdx];
+                const fullSrc = $(this).data('src');
+
+                $('#modal-target-img').attr('src', fullSrc);
+                $('#modal-target-caption').text(imgInfo.caption);
+
+                $('#image-modal').css('display', 'flex');
+            });
+
+            $('#close-modal').on('click', function () {
+                $('#image-modal').hide();
+            });
+
+            $('#image-modal').on('click', function (e) {
+                if ($(e.target).hasClass('xp-modal-overlay')) {
+                    $('#image-modal').hide();
+                }
+            });
+
+            loadImagesFromJSON();
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的工具 - 正在施工</title>
+
+    <!-- 引入與主頁相同的 XP.css 樣式庫 -->
+    <link rel="stylesheet" href="https://unpkg.com/xp.css">
+
+    <style>
+        /* 移除外邊距，設定符合 XP 系統內頁的經典灰色背景（參考 profile.html） */
+        body {
+            margin: 0;
+            padding: 12px;
+            background-color: #ece9d8;
+            font-family: Tahoma, SimSun, "宋体", sans-serif;
+            font-size: 12px;
+            color: #000;
+        }
+
+        /* 主內容排版容器，改用標準流佈局，避免與 iframe 視窗產生多重滾動條 */
+        .construction-content {
+            padding: 8px;
+            text-align: center;
+        }
+
+        /* 說明圖片的 XP 風格相框（參考 profile.html 的頭像框風格） */
+        .image-frame {
+            background: #fff;
+            border: 2px inset #fff;
+            /* 經典 XP 內凹邊框 */
+            padding: 6px;
+            margin: 16px auto;
+            display: inline-block;
+            box-shadow: 1px 1px 0px #fff;
+        }
+
+        /* 修改重點：限制圖標在合適的較小尺寸，並防止變形 */
+        .image-frame img {
+            width: 120px;
+            /* 限制寬度為 120px，避免佔滿屏幕 */
+            height: 120px;
+            /* 限制高度為 120px，保持正方形比例 */
+            max-width: 100%;
+            object-fit: contain;
+            /* 確保圖片不論如何縮放都能完整居中顯示且不失真 */
+            display: block;
+            border: 1px solid #7f9db9;
+            /* 系統相框線 */
+            background-color: #f1f1f1;
+        }
+
+        /* 經典 XP 提示標題與內文 */
+        .status-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #001f5c;
+            margin-top: 8px;
+            margin-bottom: 4px;
+        }
+
+        .status-desc {
+            font-size: 12px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* 經典 XP 風格水平分隔線 */
+        .xp-hr {
+            height: 2px;
+            border: none;
+            background-color: #7f9db9;
+            margin: 16px 0;
+            box-shadow: 0 1px 0 #fff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 外層包裹經典 XP fieldset 容器，邊距完全參考 profile.html 與 articles.html -->
+    <fieldset style="margin: 0; padding: 16px;">
+        <legend>系統提示</legend>
+
+        <div class="construction-content">
+            <!-- 狀態標題 -->
+            <div class="status-title">🚧 正在施工，敬請期待 🚧</div>
+
+            <hr class="xp-hr">
+
+            <!-- 說明圖片展示區域 -->
+            <div class="image-frame">
+                <!-- 修改重點：簡化 onerror 邏輯，避免行內屬性覆蓋 CSS 尺寸限制 -->
+                <img src="../assets/under_construction.png" alt="施工中說明圖"
+                    onerror="this.style.backgroundColor='#99c1ed';">
+            </div>
+
+            <!-- 詳細說明文字 -->
+            <p class="status-desc">
+                該功能模組目前正在進行內部升級與代碼調試。<br>
+                請稍後再從主桌面的快捷方式或開始功能表嘗試重新訪問。
+            </p>
+        </div>
+    </fieldset>
+
+</body>
+
+</html>

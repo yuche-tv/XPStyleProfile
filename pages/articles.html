@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章列表</title>
+
+    <!-- 引入與主頁相同的 XP.css 樣式庫 -->
+    <link rel="stylesheet" href="https://unpkg.com/xp.css">
+    <!-- 引入 jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 12px;
+            background-color: #ece9d8;
+            font-family: Tahoma, SimSun, "宋体", sans-serif;
+            font-size: 12px;
+            color: #000;
+        }
+
+        /* 頂部工具列 */
+        .toolbar {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            cursor: pointer;
+            height: 22px;
+            box-sizing: border-box;
+        }
+
+        .btn-back img {
+            width: 14px;
+            height: 14px;
+            margin-right: 4px;
+        }
+
+        /* 列表與閱讀面板控制 */
+        #list-panel,
+        #viewer-panel {
+            margin: 0;
+            padding: 16px;
+            box-sizing: border-box;
+            min-height: 330px;
+        }
+
+        /* 文章列表表格樣式 */
+        .article-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+        }
+
+        .article-table th {
+            text-align: left;
+            padding: 6px 8px;
+            background: linear-gradient(to bottom, #f9f8f4 0%, #ece9d8 100%);
+            border: 1px solid #d3d3d3;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .article-table td {
+            padding: 6px 8px;
+            border: 1px solid #efefef;
+        }
+
+        .article-table tr:hover td {
+            background-color: #316ac5;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .article-table tr:hover td a {
+            color: #fff;
+        }
+
+        .article-link {
+            color: #002b9f;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .article-link:hover {
+            text-decoration: underline;
+        }
+
+        /* 閱讀器樣式 */
+        .post-header h1 {
+            font-size: 20px;
+            margin: 0 0 4px 0;
+            color: #001f5c;
+        }
+
+        .post-header h2 {
+            font-size: 13px;
+            margin: 0 0 8px 0;
+            color: #555;
+            font-weight: normal;
+        }
+
+        .post-meta {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .xp-hr {
+            height: 2px;
+            border: none;
+            background-color: #7f9db9;
+            margin: 12px 0;
+            box-shadow: 0 1px 0 #fff;
+        }
+
+        /* 移除固定高度小窗口與獨立背景邊框，使其直接在分割線下方鋪開 */
+        .post-body {
+            line-height: 1.6;
+            font-size: 13px;
+            padding: 4px 0;
+        }
+
+        .post-body h1,
+        .post-body h2,
+        .post-body h3 {
+            color: #001f5c;
+            margin-top: 14px;
+            margin-bottom: 8px;
+        }
+
+        /* 修改重點：在原本基礎上均稍微放大標題字號，使其能與 13px 的正文清晰區分 */
+        .post-body h1 {
+            font-size: 22px;
+            /* 原為 18px */
+        }
+
+        .post-body h2 {
+            font-size: 18px;
+            /* 原為 14px */
+        }
+
+        .post-body h3 {
+            font-size: 15px;
+            /* 原為 12px */
+        }
+
+        .post-body ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .post-body li {
+            margin-bottom: 4px;
+        }
+
+        /* 優化段落標籤的上下外邊距，符合 WinXP 簡潔排版 */
+        .post-body p {
+            margin: 0 0 12px 0;
+            text-align: justify;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 頂部工具列：放置返回鍵 -->
+    <div class="toolbar">
+        <button class="btn-back" id="btn-back" style="display: none;">
+            <img src="../assets/icon_back.png" alt="Back"> 返回列表
+        </button>
+    </div>
+
+    <!-- 面板一：文章列表 -->
+    <fieldset id="list-panel">
+        <legend>文章管理器</legend>
+        <table class="article-table">
+            <thead>
+                <tr>
+                    <th style="width: 55%;">標題</th>
+                    <th style="width: 25%;">發佈日期</th>
+                    <th style="width: 20%;">作者</th>
+                </tr>
+            </thead>
+            <tbody id="article-list-rows">
+                <tr>
+                    <td colspan="3" style="text-align:center; color:#666;">正在加載文章列表...</td>
+                </tr>
+            </tbody>
+        </table>
+    </fieldset>
+
+    <!-- 面板二：文章閱讀器 (預設隱藏) -->
+    <fieldset id="viewer-panel" style="display: none;">
+        <legend>文章閱讀器</legend>
+        <div class="post-header">
+            <h1 id="post-title">測試標題</h1>
+            <h2 id="post-subtitle">測試副標題</h2>
+            <div class="post-meta">
+                作者: <span id="post-author">-</span> |
+                發佈時間: <span id="post-date">-</span>
+            </div>
+        </div>
+
+        <hr class="xp-hr">
+
+        <div class="post-body" id="post-body">
+            <!-- 解析後的正文內容將注入在此 -->
+        </div>
+    </fieldset>
+
+    <script>
+        $(document).ready(function () {
+            const INDEX_URL = '../articles/index.json';
+            const ARTICLE_DIR = '../articles/';
+            let allArticles = [];
+
+            // 1. 核心載入：讀取清單並逐一解析其元數據
+            function loadArticleList() {
+                $.ajax({
+                    url: INDEX_URL,
+                    dataType: 'json',
+                    cache: false,
+                    success: function (files) {
+                        if (files.length === 0) {
+                            showEmptyMessage();
+                            return;
+                        }
+
+                        let fetchPromises = files.map(file => {
+                            return $.ajax({
+                                url: ARTICLE_DIR + file.filename,
+                                dataType: 'text',
+                                cache: false
+                            }).then(mdContent => {
+                                // 解析單個 .md 檔案的元數據
+                                let parsed = parseMarkdown(mdContent);
+                                parsed.filename = file.filename;
+                                return parsed;
+                            }).catch(err => {
+                                console.error("無法加載檔案: " + file.filename, err);
+                                return null;
+                            });
+                        });
+
+                        // 等所有檔案都抓取解析完畢後排序並渲染
+                        Promise.all(fetchPromises).then(results => {
+                            allArticles = results.filter(item => item !== null);
+
+                            // 依據日期排序 (從新到舊)
+                            allArticles.sort((a, b) => new Date(b.meta.date) - new Date(a.meta.date));
+
+                            renderTable(allArticles);
+                        });
+                    },
+                    error: function (err) {
+                        console.error("無法加載 index.json", err);
+                        $('#article-list-rows').html('<tr><td colspan="3" style="text-align:center; color:red;">加載失敗，請檢查 articles/index.json 是否存在。</td></tr>');
+                    }
+                });
+            }
+
+            function showEmptyMessage() {
+                $('#article-list-rows').html('<tr><td colspan="3" style="text-align:center; color:#666;">目前沒有任何文章。</td></tr>');
+            }
+
+            // 2. 渲染列表表格
+            function renderTable(articles) {
+                let html = '';
+                if (articles.length === 0) { showEmptyMessage(); return; }
+
+                articles.forEach((article, index) => {
+                    html += `
+                        <tr class="clickable-row" data-index="${index}">
+                            <td><a href="#" class="article-link">${article.meta.title || article.filename}</a></td>
+                            <td>${article.meta.date || '-'}</td>
+                            <td>${article.meta.author || '-'}</td>
+                        </tr>
+                    `;
+                });
+                $('#article-list-rows').html(html);
+            }
+
+            // 3. 點擊文章行觸發閱讀器
+            $(document).on('click', '.clickable-row', function (e) {
+                e.preventDefault();
+                let idx = $(this).data('index');
+                let article = allArticles[idx];
+
+                if (article) {
+                    $('#post-title').text(article.meta.title || '無標題');
+                    $('#post-subtitle').text(article.meta.subtitle || '');
+                    $('#post-author').text(article.meta.author || '未知');
+                    $('#post-date').text(article.meta.date || '-');
+
+                    // 渲染解析後的 HTML 正文
+                    $('#post-body').html(article.htmlBody);
+
+                    // 切換面板與顯示返回鍵
+                    $('#list-panel').hide();
+                    $('#viewer-panel').show();
+                    $('#btn-back').show();
+                }
+            });
+
+            // 4. 返回按鈕點擊事件
+            $('#btn-back').on('click', function () {
+                $('#viewer-panel').hide();
+                $('#btn-back').hide();
+                $('#list-panel').show();
+            });
+
+            // 5. 輕量級 Markdown 與 JSON 元數據解析引擎
+            function parseMarkdown(rawContent) {
+                let meta = { title: '', subtitle: '', date: '', author: '' };
+                let bodyText = rawContent;
+
+                // 匹配開頭的 --- json --- 元數據
+                const metaRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
+                const match = rawContent.match(metaRegex);
+
+                if (match) {
+                    try {
+                        meta = JSON.parse(match[1]);
+                        bodyText = rawContent.replace(metaRegex, ''); // 移除元數據保留正文
+                    } catch (e) {
+                        console.error("JSON 元數據解析出錯", e);
+                    }
+                }
+
+                // 精簡 Markdown 語法轉換核心
+                let html = bodyText
+                    .replace(/\r\n/g, '\n')
+                    // 必須由井字號多到少依序解析，防止攔截錯誤
+                    .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
+                    .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
+                    .replace(/^# (.*?)$/gm, '<h1>$1</h1>')
+                    // 粗體解析
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    // 列表解析 (處理簡單的星號列表)
+                    .replace(/^\* (.*?)$/gm, '<li>$1</li>')
+                    // 將連續的 <li> 包裹進 <ul> 標籤中
+                    .replace(/([\s\S]*?)(<li>[\s\S]*?<\/li>)/g, function (m, p1, p2) {
+                        return p1 + '<ul>' + p2 + '</ul>';
+                    })
+                    // 清理重疊的 <ul> 標籤保護機制
+                    .replace(/<\/ul>\s*<ul>/g, '')
+                    // 優化段落與換行處理。將雙換行符號替換為單個 <br>，避免過度留白
+                    .replace(/\n\n/g, '<br>');
+
+                return { meta: meta, htmlBody: html };
+            }
+
+            // 初始化加載
+            loadArticleList();
+        });
+    </script>
+</body>
+
+</html>
